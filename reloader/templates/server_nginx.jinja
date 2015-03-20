@@ -9,7 +9,7 @@ server {
 
     rewrite ^/(.*)/favicon.ico$ /favicon.ico last;
 
-    access_log  /tmp/{{appname}}-{{entrypoint}}-access.log error;
+    access_log  /tmp/{{appname}}-{{entrypoint}}-access.log;
     error_log /tmp/{{appname}}-{{entrypoint}}-error.log error;
 
     location ~* (favicon.ico) {
