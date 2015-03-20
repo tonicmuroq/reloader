@@ -1,0 +1,30 @@
+{% for entrypoint, nodes in backends.iteritems() %}
+{% if nodes %}
+server {
+    listen 80;
+    server_name {{appname}}-{{entrypoint}}.intra.hunantv.com;
+
+    underscores_in_headers on;
+    ignore_invalid_headers off;
+
+    rewrite ^/(.*)/favicon.ico$ /favicon.ico last;
+
+    access_log  /tmp/{{appname}}-{{entrypoint}}-access.log error;
+    error_log /tmp/{{appname}}-{{entrypoint}}-error.log error;
+
+    location ~* (favicon.ico) {
+        log_not_found off;
+        break;
+    }
+
+    location ~ ^/ {
+        proxy_set_header X-NBE-APPNAME {{appname}};
+        proxy_set_header X-NBE-ENTRYPOINT {{entrypoint}};
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header HOST $host;
+        proxy_read_timeout 600;
+        proxy_pass http://{{appname}}-{{entrypoint}};
+    }
+}
+{% endif %}
+{% endfor %}

@@ -1,0 +1,10 @@
+{% for entrypoint, nodes in backends.iteritems() %}
+{% if nodes %}
+upstream {{appname}}-{{entrypoint}} {
+    {% for node in nodes %}
+    server {{node}} max_fails=1 fail_timeout=1s;
+    {% endfor %}
+    keepalive 16;
+}
+{% endif %}
+{% endfor%}
