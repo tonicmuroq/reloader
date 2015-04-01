@@ -12,7 +12,7 @@ class Config(dict):
 _default_config = {
     'watch_key': 'eru:discovery:published',
     'entrypoints_key': 'eru:app:%s:backends',
-    'backends_key': 'eru:app:entrypoint:%s:backends',
+    'backends_key': 'eru:app:%s:entrypoint:%s:backends',
     'nginx': 'nginx',
     'upstream_dir': '/etc/nginx/up.conf.d/',
     'server_dir': '/etc/nginx/s.conf.d/',

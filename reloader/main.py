@@ -33,7 +33,7 @@ def watch():
 
 def service_reload(appname):
     entrypoints = rds.hkeys(config.entrypoints_key % appname)
-    backends = {entrypoint: list(rds.smembers(config.backends_key % entrypoint)) for entrypoint in entrypoints}
+    backends = {entrypoint: list(rds.smembers(config.backends_key % (appname, entrypoint))) for entrypoint in entrypoints}
     reload_nginx_config(appname, backends)
     reload_nginx()
 
