@@ -19,6 +19,9 @@ _default_config = {
     'redis_host': '127.0.0.1',
     'redis_port': 6379,
     'daemonize': False,
+    'pod': 'intra',
+    'log_prefix': '/data/logs',
+    'template_folder': 'templates',
 }
 
 def load_config():
@@ -33,6 +36,9 @@ def load_config():
     parser.add_option('-r', '--redis-host', dest='redis_host', type='str', default=None)
     parser.add_option('-p', '--redis-port', dest='redis_port', type='int', default=None)
     parser.add_option('-d', '--daemon', dest='daemonize', action='store_true', default=None)
+    parser.add_option('-o', '--pod', dest='pod', type='str', default='intra')
+    parser.add_option('-l', '--log-prefix', dest='log_prefix', type='str', default='/data/logs')
+    parser.add_option('-t', '--template-folder', dest='template_folder', type='str', default='templates')
     options, _ = parser.parse_args()
 
     file_config = _default_config

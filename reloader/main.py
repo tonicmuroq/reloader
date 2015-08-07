@@ -5,12 +5,15 @@ import redis
 import logging
 from subprocess import check_call
 
+import reloader
 from reloader.ensure import ensure_file, ensure_file_absent
 from reloader.config import load_config
-from reloader.templates import template
+from reloader.templates import Jinja2
 
 config = load_config()
 rds = redis.Redis(config.redis_host, config.redis_port)
+template = Jinja2(reloader.__name__, template_folder=config.template_folder)
+
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(asctime)s: %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -50,9 +53,9 @@ def reload_nginx_config(appname, backends):
         ensure_file_absent(server_conf)
     else:
         upstream_nginx_conf = template.render_template('/upstream_nginx.jinja',
-                appname=appname, backends=backends)
+                appname=appname, backends=backends, config=config)
         server_nginx_conf = template.render_template('/server_nginx.jinja',
-                appname=appname, backends=backends)
+                appname=appname, backends=backends, config=config)
         ensure_file(up_conf, content=upstream_nginx_conf)
         ensure_file(server_conf, content=server_nginx_conf)
 

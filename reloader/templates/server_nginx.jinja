@@ -2,15 +2,15 @@
 {% if nodes %}
 server {
     listen 80;
-    server_name {{appname}}-{{entrypoint}}.intra.hunantv.com;
+    server_name {{appname}}-{{entrypoint}}.{{config.pod}}.hunantv.com;
 
     underscores_in_headers on;
     ignore_invalid_headers off;
 
     rewrite ^/(.*)/favicon.ico$ /favicon.ico last;
 
-    access_log  /tmp/{{appname}}-{{entrypoint}}-access.log;
-    error_log /tmp/{{appname}}-{{entrypoint}}-error.log error;
+    access_log  {{config.log_prefix}}/{{appname}}/{{entrypoint}}-access.log;
+    error_log {{config.log_prefix}}/{{appname}}/{{entrypoint}}-error.log error;
 
     location ~* (favicon.ico) {
         log_not_found off;

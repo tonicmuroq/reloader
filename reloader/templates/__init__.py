@@ -2,8 +2,6 @@
 
 from jinja2 import Environment, PackageLoader
 
-import reloader
-
 class Jinja2(object):
 
     def __init__(self, package_name, template_folder='templates'):
@@ -14,6 +12,3 @@ class Jinja2(object):
     def render_template(self, template_name, **data):
         template = self.environment.get_template(template_name)
         return template.render(**data)
-
-template = Jinja2(reloader.__name__)
-
