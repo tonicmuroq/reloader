@@ -38,9 +38,8 @@ def watch():
                 continue
             if data['data'] == 'stop':
                 break
-            logger.info('New node of [%s] published, reload' % data['data'])
+            logger.info('Reload Signal of [%s] published, reload' % data['data'])
             service_reload(data['data'])
-            logger.info('Reload of [%s] done' % data['data'])
     except Exception as e:
         logger.exception(e)
     finally:
@@ -53,6 +52,7 @@ def service_reload(appname):
     old_backends = backends_cache.get(appname, {})
 
     if not _judge_backends_diff(old_backends, backends):
+        logger.info('No new nodes found for [%s], ignore' % appname)
         return
         
     backends_cache[appname] = backends
@@ -63,6 +63,8 @@ def service_reload(appname):
     # reload nginx
     reload_nginx_config(appname, backends)
     reload_nginx()
+    
+    logger.info('Reload of [%s] done' % appname)
 
 def reload_nginx_config(appname, backends):
 
