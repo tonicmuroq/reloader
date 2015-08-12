@@ -17,6 +17,18 @@ template = Jinja2(reloader.__name__, template_folder=config.template_folder)
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(asctime)s: %(message)s')
 logger = logging.getLogger(__name__)
 
+backends_cache = {}
+
+def _judge_backends_diff(old, new):
+    if set(old.keys()) != set(new.keys()):
+        return True
+    for entrypoint in new.keys():
+        old_backends = old[entrypoint]
+        new_backends = new[entrypoint]
+        if set(old_backends) != set(new_backends):
+            return True
+    return False
+
 def watch():
     pub = rds.pubsub()
     pub.subscribe(config.watch_key)
@@ -36,7 +48,14 @@ def watch():
 
 def service_reload(appname):
     entrypoints = rds.hkeys(config.entrypoints_key % appname)
+
     backends = {entrypoint: list(rds.smembers(config.backends_key % (appname, entrypoint))) for entrypoint in entrypoints}
+    old_backends = backends_cache.get(appname, {})
+
+    if not _judge_backends_diff(old_backends, backends):
+        return
+        
+    backends_cache[appname] = backends
 
     # ensure nginx access/error log dir
     ensure_dir(os.path.join(config.log_prefix, appname))
