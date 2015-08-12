@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='reloader',
-    version='0.2',
+    version='0.3',
     author='tonic',
     zip_safe=False,
     author_email='tonic@wolege.ca',

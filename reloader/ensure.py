@@ -31,3 +31,12 @@ def ensure_file_absent(path):
     if os.path.lexists(path):
         os.unlink(path)
 
+def ensure_dir(path, owner=None, group=None, mode=0755):
+    try:
+        os.mkdir(path, mode)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    if owner and group:
+        os.chown(path, get_uid(owner), get_gid(group))

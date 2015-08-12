@@ -6,7 +6,7 @@ import logging
 from subprocess import check_call
 
 import reloader
-from reloader.ensure import ensure_file, ensure_file_absent
+from reloader.ensure import ensure_file, ensure_file_absent, ensure_dir
 from reloader.config import load_config
 from reloader.templates import Jinja2
 
@@ -37,6 +37,11 @@ def watch():
 def service_reload(appname):
     entrypoints = rds.hkeys(config.entrypoints_key % appname)
     backends = {entrypoint: list(rds.smembers(config.backends_key % (appname, entrypoint))) for entrypoint in entrypoints}
+
+    # ensure nginx access/error log dir
+    ensure_dir(os.path.join(config.log_prefix, appname))
+
+    # reload nginx
     reload_nginx_config(appname, backends)
     reload_nginx()
 
