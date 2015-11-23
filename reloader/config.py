@@ -1,13 +1,16 @@
 # coding: utf-8
 
+import sys
 import yaml
 from optparse import OptionParser
 from tabulate import tabulate
+
 
 class Config(dict):
 
     def __getattr__(self, name):
         return self.get(name, None)
+
 
 _default_config = {
     'watch_key': 'eru:discovery:published',
@@ -22,7 +25,11 @@ _default_config = {
     'pod': 'intra',
     'log_prefix': '/data/logs',
     'template_folder': 'templates',
+
+    'reloader_type': 'nginx',
+    'ainur_url': '',
 }
+
 
 def load_config():
     parser = OptionParser()
@@ -39,6 +46,8 @@ def load_config():
     parser.add_option('-o', '--pod', dest='pod', type='str', default='intra')
     parser.add_option('-l', '--log-prefix', dest='log_prefix', type='str', default='/data/logs')
     parser.add_option('-t', '--template-folder', dest='template_folder', type='str', default='templates')
+    parser.add_option('-k', '--reloader-type', dest='reloader_type', type='str', default=None)
+    parser.add_option('-a', '--ainur-url', dest='ainur_url', type='str', default=None)
     options, _ = parser.parse_args()
 
     file_config = _default_config
@@ -54,5 +63,16 @@ def load_config():
         if cmd_value is not None:
             file_config[k] = cmd_value
 
+    if file_config['reloader_type'] not in ('nginx', 'openresty'):
+        print 'reloader_type must be in nginx / openresty'
+        sys.exit(-1)
+
+    if file_config['reloader_type'] == 'openresty' and not file_config['ainur_url']:
+        print 'When use openresty, must set ainur url'
+        sys.exit(-1)
+
     print tabulate([[k, str(v)] for k, v in file_config.iteritems()], headers=['Config Key', 'Config Value'])
     return Config(**file_config)
+
+
+config = load_config()

@@ -3,8 +3,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='reloader',
-    version='0.5',
+    name='eru-reloader',
+    version='1.0',
     author='tonic',
     zip_safe=False,
     author_email='tonic@wolege.ca',
@@ -17,6 +17,7 @@ setup(
     entry_points={
         'console_scripts':[
             'rld=reloader.main:main',
+            'eru-reloader=reloader.main:main',
         ],
     },
     install_requires=[

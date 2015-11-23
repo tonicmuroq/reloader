@@ -1,33 +1,30 @@
 # coding: utf-8
 
-import os
 import redis
 import logging
-from subprocess import check_call
 
-import reloader
-from reloader.ensure import ensure_file, ensure_file_absent, ensure_dir
-from reloader.config import load_config
-from reloader.templates import Jinja2
+from reloader.nginx import service_reload_nginx
+from reloader.openresty import service_reload_openresty
+from reloader.config import config
 
-config = load_config()
-rds = redis.Redis(config.redis_host, config.redis_port)
-template = Jinja2(reloader.__name__, template_folder=config.template_folder)
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(asctime)s: %(message)s')
 logger = logging.getLogger(__name__)
 
-backends_cache = {}
+rds = redis.Redis(config.redis_host, config.redis_port)
 
-def _judge_backends_diff(old, new):
-    if set(old.keys()) != set(new.keys()):
-        return True
-    for entrypoint in new.keys():
-        old_backends = old[entrypoint]
-        new_backends = new[entrypoint]
-        if set(old_backends) != set(new_backends):
-            return True
-    return False
+reloader_function = {
+    'nginx': service_reload_nginx,
+    'openresty': service_reload_openresty,
+}
+
+service_reload = reloader_function[config.reloader_type]
+
+
+def get_backends(appname):
+    entrypoints = rds.hkeys(config.entrypoints_key % appname)
+    return {entrypoint: list(rds.smembers(config.backends_key % (appname, entrypoint))) for entrypoint in entrypoints}
+
 
 def watch():
     pub = rds.pubsub()
@@ -39,57 +36,14 @@ def watch():
             if data['data'] == 'stop':
                 break
             logger.info('Reload Signal of [%s] published, reload' % data['data'])
-            service_reload(data['data'])
+
+            appname = data['data']
+            backends = get_backends(appname)
+            service_reload(appname, backends)
     except Exception as e:
         logger.exception(e)
     finally:
         pub.unsubscribe()
-
-def service_reload(appname):
-    entrypoints = rds.hkeys(config.entrypoints_key % appname)
-
-    backends = {entrypoint: list(rds.smembers(config.backends_key % (appname, entrypoint))) for entrypoint in entrypoints}
-    old_backends = backends_cache.get(appname, {})
-
-    if not _judge_backends_diff(old_backends, backends):
-        logger.info('No new nodes found for [%s], ignore' % appname)
-        return
-        
-    backends_cache[appname] = backends
-
-    # ensure nginx access/error log dir
-    ensure_dir(os.path.join(config.log_prefix, appname))
-
-    # reload nginx
-    reload_nginx_config(appname, backends)
-    reload_nginx()
-    
-    logger.info('Reload of [%s] done' % appname)
-
-def reload_nginx_config(appname, backends):
-
-    def _check_backends(b):
-        """check if backends is not {'entry1': [], 'entry2': []}..."""
-        return any(b.values())
-
-    up_conf = os.path.join(config.upstream_dir, '{0}.conf'.format(appname))
-    server_conf = os.path.join(config.server_dir, '{0}.conf'.format(appname))
-    if not _check_backends(backends):
-        ensure_file_absent(up_conf)
-        ensure_file_absent(server_conf)
-    else:
-        upstream_nginx_conf = template.render_template('/upstream_nginx.jinja',
-                appname=appname, backends=backends, config=config)
-        server_nginx_conf = template.render_template('/server_nginx.jinja',
-                appname=appname, backends=backends, config=config)
-        ensure_file(up_conf, content=upstream_nginx_conf)
-        ensure_file(server_conf, content=server_nginx_conf)
-
-def reload_nginx():
-    try:
-        check_call([config.nginx, '-s', 'reload'])
-    except Exception as e:
-        logger.exception('Reload command failed, %s' % e)
 
 def main():
     try:
