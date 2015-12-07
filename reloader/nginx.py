@@ -13,7 +13,7 @@ from reloader.templates import Jinja2
 logger = logging.getLogger(__name__)
 template = Jinja2(reloader.__name__, template_folder=config.template_folder)
 
-__backends_cache = {}
+_backends_cache = {}
 
 
 def _judge_backends_diff(old, new):
@@ -28,12 +28,12 @@ def _judge_backends_diff(old, new):
 
 
 def service_reload_nginx(appname, backends):
-    old_backends = __backends_cache.get(appname, {})
+    old_backends = _backends_cache.get(appname, {})
     if not _judge_backends_diff(old_backends, backends):
         logger.info('No new nodes found for [%s], ignore' % appname)
         return
         
-    __backends_cache[appname] = backends
+    _backends_cache[appname] = backends
 
     # ensure nginx access/error log dir
     ensure_dir(os.path.join(config.log_prefix, appname))
