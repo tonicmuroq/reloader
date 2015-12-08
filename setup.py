@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='eru-reloader',
-    version='1.1',
+    version='1.2',
     author='tonic',
     zip_safe=False,
     author_email='tonic@wolege.ca',
