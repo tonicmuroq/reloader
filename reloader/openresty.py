@@ -7,6 +7,7 @@ from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
 
 from reloader.config import config
+from reloader.sms import send_sms
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def get_balancers(appname, entrypoint):
         resp = _session.get(url)
         return resp.json()
     except RequestException as e:
-        # TODO 这里其实应该发个邮件/短信之类的通知获取失败
+        send_sms('[Reloader Error] 我擦, 获取[%s:%s]后端失败, 更新失败' % (appname, entrypoint))
         logger.exception('Error when getting balancer for %s:%s' % (appname, entrypoint))
         logger.exception(e)
         return None
@@ -38,7 +39,7 @@ def update_balancer(upstream_url, backend_name, servers):
         try:
             _session.delete(upstream_url, data=json.dumps({'backend': backend_name}))
         except RequestException as e:
-            # TODO 这里也应该通知
+            send_sms('[Reloader Error] 我去, 删除后端[%s]失败' % backend_name)
             logger.exception('Error when deleting backends for %s' % backend_name)
             logger.exception(e)
         return
@@ -47,7 +48,7 @@ def update_balancer(upstream_url, backend_name, servers):
     try:
         _session.put(upstream_url, data=json.dumps({'backend': backend_name, 'servers': servers}))
     except RequestException as e:
-        # TODO 这里也应该通知
+        send_sms('[Reloader Error] 尼玛啊, 更新后端[%s]失败' % backend_name)
         logger.exception('Error when updating backends for %s' % backend_name)
         logger.exception(e)
 

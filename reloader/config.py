@@ -28,6 +28,9 @@ _default_config = {
 
     'reloader_type': 'nginx',
     'ainur_url': '',
+
+    'sms_url': '',
+    'mobiles': '',
 }
 
 
@@ -48,6 +51,8 @@ def load_config():
     parser.add_option('-t', '--template-folder', dest='template_folder', type='str', default='templates')
     parser.add_option('-k', '--reloader-type', dest='reloader_type', type='str', default=None)
     parser.add_option('-a', '--ainur-url', dest='ainur_url', type='str', default=None)
+    parser.add_option('-y', '--sms-url', dest='sms_url', type='str', default=None)
+    parser.add_option('-z', '--mobiles', dest='mobiles', type='str', default=None)
     options, _ = parser.parse_args()
 
     file_config = _default_config
